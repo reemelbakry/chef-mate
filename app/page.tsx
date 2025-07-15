@@ -18,7 +18,7 @@ type ChatDemoProps = {
 }
 
 export default function Home(props: ChatDemoProps) {
-  const [selectedModel, setSelectedModel] = useState("llama-3.1-70b-versatile");
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const {
     messages,
     input,

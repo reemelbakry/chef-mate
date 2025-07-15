@@ -18,16 +18,19 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
+const GOOGLE_MODELS = ["gemini-2.5-flash"];
+
 export async function POST(req: Request) {
   const {
     messages,
     data,
   }: { messages: CoreMessage[]; data: { model: string } } = await req.json();
 
-  const model =
-    data.model === "gemini-2.5-flash"
-      ? google(data.model)
-      : groq(data.model);
+  const { model: modelId } = data;
+
+  const model = GOOGLE_MODELS.includes(modelId)
+    ? google(modelId)
+    : groq(modelId);
 
   const result = streamText({
     model,

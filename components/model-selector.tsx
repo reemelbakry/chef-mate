@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/select"
 
 const MODELS = [
-  { id: "llama-3.3-70b-versatile", name: "Llama 3.1 70B" },
   { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+  { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
+  { id: "mistral-saba-24b", name: "Mistral Saba 24B" },
 ]
 
 interface ModelSelectorProps {
