@@ -44,39 +44,49 @@ export default function Home(props: ChatDemoProps) {
   const isLoading = status === "submitted" || status === "streaming"
  
   return (
-    <div className={cn("flex", "flex-col", "h-[500px]", "w-full")}>
-      <div className={cn("flex", "justify-end", "mb-2")}>
-        <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Model" />
-          </SelectTrigger>
-          <SelectContent>
-            {MODELS.map((model) => (
-              <SelectItem key={model.id} value={model.id}>
-                {model.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <main className="flex h-screen flex-col items-center justify-center bg-muted/40 p-4">
+      <div className="w-full max-w-3xl rounded-2xl border bg-background shadow-xl">
+        <div className="p-6">
+          <h1 className="text-lg font-semibold">ChefMate</h1>
+          <p className="text-sm text-muted-foreground">
+            Your personal cooking assistant
+          </p>
+        </div>
+
+        <div className="h-[60vh] p-6 pt-0">
+          <Chat
+            className="h-full"
+            messages={messages}
+            handleSubmit={handleSubmit}
+            input={input}
+            handleInputChange={handleInputChange}
+            isGenerating={isLoading}
+            stop={stop}
+            append={append}
+            setMessages={setMessages}
+            suggestions={[
+              "Healthy dessert",
+              "Surprise me with a recipe",
+              "High-protein breakfast",
+            ]}
+          />
+        </div>
+
+        <div className="flex items-center justify-end border-t p-4">
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Model" />
+            </SelectTrigger>
+            <SelectContent>
+              {MODELS.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
- 
-      <Chat
-        className="grow"
-        messages={messages}
-        handleSubmit={handleSubmit}
-        input={input}
-        handleInputChange={handleInputChange}
-        isGenerating={isLoading}
-        stop={stop}
-        append={append}
-        setMessages={setMessages}
-        // transcribeAudio={transcribexAudio}
-        suggestions={[
-          "Healthy dessert",
-          "Surprise me with a recipe",
-          "High-protein breakfast",
-        ]}
-      />
-    </div>
+    </main>
   )
 }
