@@ -1,5 +1,3 @@
-import { createGroq } from "@ai-sdk/groq";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText, type CoreMessage } from "ai";
 import {
   findRecipesTool,
@@ -7,18 +5,9 @@ import {
   getNutritionByIdTool,
 } from "@/lib/tools";
 import { systemPrompt } from "@/lib/prompts";
+import { getModel } from "@/lib/models";
 
 export const maxDuration = 30;
-
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
-});
-
-const GOOGLE_MODELS = ["gemini-2.5-flash"];
 
 export async function POST(req: Request) {
   const {
@@ -26,11 +15,7 @@ export async function POST(req: Request) {
     data,
   }: { messages: CoreMessage[]; data: { model: string } } = await req.json();
 
-  const { model: modelId } = data;
-
-  const model = GOOGLE_MODELS.includes(modelId)
-    ? google(modelId)
-    : groq(modelId);
+  const model = getModel(data.model);
 
   const result = streamText({
     model,
@@ -39,7 +24,7 @@ export async function POST(req: Request) {
     tools: {
       findRecipes: findRecipesTool,
       getRecipeDetails: getRecipeDetailsTool,
-      getNutritionById: getNutritionByIdTool,
+      getNutritionFacts: getNutritionByIdTool,
     },
     maxSteps: 10,
   });
