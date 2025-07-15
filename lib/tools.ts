@@ -168,14 +168,18 @@ export const findRecipesTool = tool({
   parameters: z.object({
     ingredients: z.array(z.string()).optional().describe("A list of ingredients that the user has available."),
     cuisine: z.enum(SUPPORTED_CUISINES).optional().describe("The cuisine to filter recipes by. If the user specifies a cuisine not in this list, you must inform them and ask to choose from the available options."),
+    query: z.string().optional().describe("The (natural language) recipe search query.."),
   }),
-  execute: async ({ ingredients, cuisine }) => {
+  execute: async ({ ingredients, cuisine, query }) => {
     const params = new URLSearchParams();
     if (ingredients && ingredients.length > 0) {
         params.append("includeIngredients", ingredients.join(","));
     }
     if (cuisine) {
         params.append("cuisine", cuisine);
+    }
+    if (query) {
+        params.append("query", query);
     }
     params.append("apiKey", SPOONACULAR_API_KEY);
     

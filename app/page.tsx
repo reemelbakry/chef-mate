@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/select"
  
 const MODELS = [
-  { id: "llama-3.1-70b-versatile", name: "Llama 3.1 70B" },
-  { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+  { id: "llama3-70b-8192", name: "Llama 3 70B" },
+  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
 ]
  
 type ChatDemoProps = {
@@ -67,9 +67,9 @@ export default function Home(props: ChatDemoProps) {
             append={append}
             setMessages={setMessages}
             suggestions={[
-              "Healthy dessert",
-              "Surprise me with a recipe",
-              "High-protein breakfast",
+              "Suggest me 3 recipes from the italian cuisine",
+              "What's the nutrition facts of a casesar salad?",
+              "Can you list me the ingredients needed to make a lasagna silvia?",
             ]}
           />
         </div>
