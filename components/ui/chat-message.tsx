@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { motion } from "framer-motion"
-import { Ban, ChevronRight, Code2, Loader2, Terminal } from "lucide-react"
+import { Ban, ChevronRight, Terminal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/collapsible"
 import { FilePreview } from "@/components/ui/file-preview"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import { ToolInvocation } from "@/components/ui/tool-invocation"
 
 const chatBubbleVariants = cva(
   "group/message relative break-words rounded-lg p-3 text-sm sm:max-w-[70%]",
@@ -86,7 +87,7 @@ interface ToolResult {
   }
 }
 
-type ToolInvocation = PartialToolCall | ToolCall | ToolResult
+type ToolInvocationType = PartialToolCall | ToolCall | ToolResult
 
 interface ReasoningPart {
   type: "reasoning"
@@ -95,7 +96,7 @@ interface ReasoningPart {
 
 interface ToolInvocationPart {
   type: "tool-invocation"
-  toolInvocation: ToolInvocation
+  toolInvocation: ToolInvocationType
 }
 
 interface TextPart {
@@ -133,7 +134,7 @@ export interface Message {
   content: string
   createdAt?: Date
   experimental_attachments?: Attachment[]
-  toolInvocations?: ToolInvocation[]
+  toolInvocations?: ToolInvocationType[]
   parts?: MessagePart[]
 }
 
@@ -204,77 +205,60 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   }
 
   if (parts && parts.length > 0) {
-    return parts.map((part, index) => {
-      if (part.type === "text") {
-        return (
-          <div
-            className={cn(
-              "flex flex-col",
-              isUser ? "items-end" : "items-start"
-            )}
-            key={`text-${index}`}
-          >
-            <div className={cn(chatBubbleVariants({ isUser, animation }))}>
-              <MarkdownRenderer>{part.text}</MarkdownRenderer>
-              {actions ? (
-                <div className="absolute -bottom-4 right-2 flex space-x-1 rounded-lg border bg-background p-1 text-foreground opacity-0 transition-opacity group-hover/message:opacity-100">
-                  {actions}
-                </div>
-              ) : null}
-            </div>
-
-            {showTimeStamp && createdAt ? (
-              <time
-                dateTime={createdAt.toISOString()}
-                className={cn(
-                  "mt-1 block px-1 text-xs opacity-50",
-                  animation !== "none" && "duration-500 animate-in fade-in-0"
-                )}
-              >
-                {formattedTime}
-              </time>
-            ) : null}
-          </div>
-        )
-      } else if (part.type === "reasoning") {
-        return <ReasoningBlock key={`reasoning-${index}`} part={part} />
-      } else if (part.type === "tool-invocation") {
-        return (
-          <ToolCall
-            key={`tool-${index}`}
-            toolInvocations={[part.toolInvocation]}
-          />
-        )
-      }
-      return null
-    })
-  }
-
-  if (toolInvocations && toolInvocations.length > 0) {
     return (
-      <div className="space-y-2">
-        {toolInvocations.map((toolInvocation, i) => (
-          <ToolInvocation
-            key={i}
-            toolName={toolInvocation.toolName}
-            args={toolInvocation.args}
-            status={
-              (toolInvocation.result as any)?.isLoading
-                ? "loading"
-                : (toolInvocation.result as any)?.__cancelled
-                  ? "cancelled"
-                  : toolInvocation.result
-                    ? "complete"
-                    : "running"
-            }
-          />
-        ))}
-      </div>
+      <>
+        {parts.map((part, index) => {
+          if (part.type === "text") {
+            return (
+              <div
+                className={cn(
+                  "flex flex-col",
+                  isUser ? "items-end" : "items-start"
+                )}
+                key={`text-${index}`}
+              >
+                <div className={cn(chatBubbleVariants({ isUser, animation }))}>
+                  <MarkdownRenderer>{part.text}</MarkdownRenderer>
+                  {actions ? (
+                    <div className="absolute -bottom-4 right-2 flex space-x-1 rounded-lg border bg-background p-1 text-foreground opacity-0 transition-opacity group-hover/message:opacity-100">
+                      {actions}
+                    </div>
+                  ) : null}
+                </div>
+
+                {showTimeStamp && createdAt ? (
+                  <time
+                    dateTime={createdAt.toISOString()}
+                    className={cn(
+                      "mt-1 block px-1 text-xs opacity-50",
+                      animation !== "none" && "duration-500 animate-in fade-in-0"
+                    )}
+                  >
+                    {formattedTime}
+                  </time>
+                ) : null}
+              </div>
+            )
+          } else if (part.type === "reasoning") {
+            return <ReasoningBlock key={`reasoning-${index}`} part={part} />
+          } else if (part.type === "tool-invocation") {
+            return (
+              <ToolInvocations
+                key={`tool-${index}`}
+                toolInvocations={[part.toolInvocation]}
+              />
+            )
+          }
+          return null
+        })}
+      </>
     )
   }
 
   return (
-    <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
+    <div
+      className={cn("flex flex-col", isUser ? "items-end" : "items-start")}
+    >
       <div className={cn(chatBubbleVariants({ isUser, animation }))}>
         <MarkdownRenderer>{content}</MarkdownRenderer>
         {actions ? (
@@ -283,6 +267,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
         ) : null}
       </div>
+      <ToolInvocations toolInvocations={toolInvocations} />
 
       {showTimeStamp && createdAt ? (
         <time
@@ -301,156 +286,93 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
 function dataUrlToUint8Array(data: string) {
   const base64 = data.split(",")[1]
-  const buf = Buffer.from(base64, "base64")
-  return new Uint8Array(buf)
+  const binaryString = atob(base64)
+  const len = binaryString.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  return bytes
 }
 
 const ReasoningBlock = ({ part }: { part: ReasoningPart }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <Collapsible
-      className="mb-4 w-full rounded-lg border bg-muted/30 p-2"
-      onOpenChange={setIsCollapsed}
+      className="my-2 rounded-lg border bg-muted/50 p-2"
+      open={isOpen}
+      onOpenChange={setIsOpen}
     >
       <CollapsibleTrigger asChild>
-        <div className="flex cursor-pointer items-center space-x-2 px-2">
+        <div className="flex cursor-pointer items-center gap-2 text-sm">
           <Terminal className="h-4 w-4" />
-          <span className="text-sm font-medium">Reasoning</span>
-          <div className="flex-1" />
+          <span>Reasoning</span>
           <ChevronRight
             className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              !isCollapsed && "rotate-90"
+              "h-4 w-4 transition-transform",
+              isOpen ? "rotate-90" : "rotate-0"
             )}
           />
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-        >
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-background p-2 text-xs">
-            <code>{part.reasoning}</code>
-          </pre>
-        </motion.div>
+        <div className="prose-p:leading-relaxed prose-pre:p-2 prose-sm mt-2 max-w-full overflow-x-auto rounded-lg bg-black p-2 text-white">
+          <pre>{part.reasoning}</pre>
+        </div>
       </CollapsibleContent>
     </Collapsible>
   )
 }
 
-interface ToolInvocationProps {
-  toolName: string
-  args: any
-  status: "running" | "complete" | "cancelled" | "loading"
-}
-
-export function ToolInvocation({
-  toolName,
-  args,
-  status,
-}: ToolInvocationProps) {
-  const getStatusIcon = () => {
-    switch (status) {
-      case "running":
-        return <Loader2 className="h-4 w-4 animate-spin" />
-      case "loading":
-        return <Loader2 className="h-4 w-4 animate-spin" />
-      case "cancelled":
-        return <Ban className="h-4 w-4 text-destructive" />
-      case "complete":
-        return <Code2 className="h-4 w-4" />
-    }
-  }
-
-  return (
-    <div className="flex items-center space-x-2 rounded-lg border bg-muted/30 p-2">
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
-        {getStatusIcon()}
-      </div>
-      <span className="text-sm font-medium">{toolName}</span>
-    </div>
-  )
-}
-function ToolCall({
+function ToolInvocations({
   toolInvocations,
 }: Pick<ChatMessageProps, "toolInvocations">) {
-  if (!toolInvocations?.length) return null
+  if (!toolInvocations || toolInvocations.length === 0) return null
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      {toolInvocations.map((invocation, index) => {
-        const isCancelled =
-          invocation.state === "result" &&
-          invocation.result.__cancelled === true
-
-        if (isCancelled) {
+    <div className="my-2 flex w-full flex-col items-start gap-2">
+      {toolInvocations.map((tool, index) => {
+        if (tool.state === "call") {
           return (
-            <div
+            <ToolInvocation
               key={index}
-              className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm text-muted-foreground"
-            >
-              <Ban className="h-4 w-4" />
-              <span>
-                Cancelled{" "}
-                <span className="font-mono">
-                  {"`"}
-                  {invocation.toolName}
-                  {"`"}
-                </span>
-              </span>
-            </div>
+              toolName={tool.toolName}
+              args={tool.args}
+              status={"running"}
+            />
           )
-        }
-
-        switch (invocation.state) {
-          case "partial-call":
-          case "call":
+        } else if (tool.state === "result") {
+          const isCancelled = tool.result?.__cancelled === true
+          if (isCancelled) {
             return (
               <div
                 key={index}
                 className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm text-muted-foreground"
               >
-                <Terminal className="h-4 w-4" />
+                <Ban className="h-4 w-4" />
                 <span>
-                  Calling{" "}
+                  Cancelled{" "}
                   <span className="font-mono">
                     {"`"}
-                    {invocation.toolName}
+                    {tool.toolName}
                     {"`"}
                   </span>
-                  ...
                 </span>
-                <Loader2 className="h-3 w-3 animate-spin" />
               </div>
             )
-          case "result":
-            return (
-              <div
-                key={index}
-                className="flex flex-col gap-1.5 rounded-lg border bg-muted/50 px-3 py-2 text-sm"
-              >
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Code2 className="h-4 w-4" />
-                  <span>
-                    Result from{" "}
-                    <span className="font-mono">
-                      {"`"}
-                      {invocation.toolName}
-                      {"`"}
-                    </span>
-                  </span>
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap text-foreground">
-                  {JSON.stringify(invocation.result, null, 2)}
-                </pre>
-              </div>
-            )
-          default:
-            return null
+          }
+
+          return (
+            <ToolInvocation
+              key={index}
+              toolName={tool.toolName}
+              args={tool.result}
+              status={"complete"}
+            />
+          )
         }
+        return null
       })}
     </div>
   )
