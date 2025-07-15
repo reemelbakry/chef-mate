@@ -65,16 +65,21 @@ interface Attachment {
 interface PartialToolCall {
   state: "partial-call"
   toolName: string
+  args: any
+  result?: any
 }
 
 interface ToolCall {
   state: "call"
   toolName: string
+  args: any
+  result?: any
 }
 
 interface ToolResult {
   state: "result"
   toolName: string
+  args: any
   result: {
     __cancelled?: boolean
     [key: string]: any
@@ -246,7 +251,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   }
 
   if (toolInvocations && toolInvocations.length > 0) {
-    return <ToolCall toolInvocations={toolInvocations} />
+    return (
+      <div className="space-y-2">
+        {toolInvocations.map((toolInvocation, i) => (
+          <ToolInvocation
+            key={i}
+            toolName={toolInvocation.toolName}
+            args={toolInvocation.args}
+            status={
+              (toolInvocation.result as any)?.isLoading
+                ? "loading"
+                : (toolInvocation.result as any)?.__cancelled
+                  ? "cancelled"
+                  : toolInvocation.result
+                    ? "complete"
+                    : "running"
+            }
+          />
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -282,46 +306,74 @@ function dataUrlToUint8Array(data: string) {
 }
 
 const ReasoningBlock = ({ part }: { part: ReasoningPart }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
 
   return (
-    <div className="mb-2 flex flex-col items-start sm:max-w-[70%]">
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="group w-full overflow-hidden rounded-lg border bg-muted/50"
-      >
-        <div className="flex items-center p-2">
-          <CollapsibleTrigger asChild>
-            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-              <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-              <span>Thinking</span>
-            </button>
-          </CollapsibleTrigger>
+    <Collapsible
+      className="mb-4 w-full rounded-lg border bg-muted/30 p-2"
+      onOpenChange={setIsCollapsed}
+    >
+      <CollapsibleTrigger asChild>
+        <div className="flex cursor-pointer items-center space-x-2 px-2">
+          <Terminal className="h-4 w-4" />
+          <span className="text-sm font-medium">Reasoning</span>
+          <div className="flex-1" />
+          <ChevronRight
+            className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              !isCollapsed && "rotate-90"
+            )}
+          />
         </div>
-        <CollapsibleContent forceMount>
-          <motion.div
-            initial={false}
-            animate={isOpen ? "open" : "closed"}
-            variants={{
-              open: { height: "auto", opacity: 1 },
-              closed: { height: 0, opacity: 0 },
-            }}
-            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
-            className="border-t"
-          >
-            <div className="p-2">
-              <div className="whitespace-pre-wrap text-xs">
-                {part.reasoning}
-              </div>
-            </div>
-          </motion.div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+        >
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-background p-2 text-xs">
+            <code>{part.reasoning}</code>
+          </pre>
+        </motion.div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
+interface ToolInvocationProps {
+  toolName: string
+  args: any
+  status: "running" | "complete" | "cancelled" | "loading"
+}
+
+export function ToolInvocation({
+  toolName,
+  args,
+  status,
+}: ToolInvocationProps) {
+  const getStatusIcon = () => {
+    switch (status) {
+      case "running":
+        return <Loader2 className="h-4 w-4 animate-spin" />
+      case "loading":
+        return <Loader2 className="h-4 w-4 animate-spin" />
+      case "cancelled":
+        return <Ban className="h-4 w-4 text-destructive" />
+      case "complete":
+        return <Code2 className="h-4 w-4" />
+    }
+  }
+
+  return (
+    <div className="flex items-center space-x-2 rounded-lg border bg-muted/30 p-2">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
+        {getStatusIcon()}
+      </div>
+      <span className="text-sm font-medium">{toolName}</span>
+    </div>
+  )
+}
 function ToolCall({
   toolInvocations,
 }: Pick<ChatMessageProps, "toolInvocations">) {
@@ -403,3 +455,4 @@ function ToolCall({
     </div>
   )
 }
+

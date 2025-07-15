@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/select"
  
 const MODELS = [
-  { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
-  { id: "o4-mini", name: "o4-mini" },
+  { id: "llama-3.1-70b-versatile", name: "Llama 3.1 70B" },
+  { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
 ]
  
 type ChatDemoProps = {
@@ -37,7 +37,9 @@ export default function Home(props: ChatDemoProps) {
     ...props,
     api: "/api/chat",
     body: {
-      model: selectedModel,
+      data: {
+        model: selectedModel,
+      },
     },
   })
  
