@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
  
 const MODELS = [
-  { id: "llama3-70b-8192", name: "Llama 3 70B" },
+  { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile" },
   { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
 ]
  
