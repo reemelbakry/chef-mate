@@ -15,7 +15,7 @@ import {
  
 const MODELS = [
   { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
-  { id: "deepseek-r1-distill-llama-70b", name: "Deepseek R1 70B" },
+  { id: "o4-mini", name: "o4-mini" },
 ]
  
 type ChatDemoProps = {
