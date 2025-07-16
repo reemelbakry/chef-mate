@@ -259,7 +259,7 @@ export function Chat({
       ) : null}
 
       {messages.length > 0 ? (
-        <ChatMessages messages={messages}>
+        <ChatMessages messages={messages} quickReplies={quickReplies}>
           <MessageList
             messages={messages}
             isTyping={isTyping}
@@ -299,8 +299,10 @@ Chat.displayName = "Chat"
 export function ChatMessages({
   messages,
   children,
+  quickReplies,
 }: React.PropsWithChildren<{
   messages: Message[]
+  quickReplies: string[]
 }>) {
   const {
     containerRef,
@@ -308,7 +310,7 @@ export function ChatMessages({
     handleScroll,
     shouldAutoScroll,
     handleTouchStart,
-  } = useAutoScroll([messages])
+  } = useAutoScroll([messages, quickReplies])
 
   return (
     <div
