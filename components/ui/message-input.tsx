@@ -6,7 +6,6 @@ import { ArrowUp, Info, Loader2, Mic, Paperclip, Square, X } from "lucide-react"
 import { omit } from "remeda"
 
 import { cn } from "@/lib/utils"
-import { useAudioRecording } from "@/hooks/use-audio-recording"
 import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea"
 import { Button } from "@/components/ui/button"
 import { InterruptPrompt } from "@/components/ui/interrupt-prompt"
@@ -18,7 +17,6 @@ interface MessageInputBaseProps
   stop?: () => void
   isGenerating: boolean
   enableInterrupt?: boolean
-  transcribeAudio?: (blob: Blob) => Promise<string>
 }
 
 interface MessageInputWithoutAttachmentProps extends MessageInputBaseProps {
@@ -43,7 +41,6 @@ export function MessageInput({
   stop,
   isGenerating,
   enableInterrupt = true,
-  transcribeAudio,
   ...props
 }: MessageInputProps) {
   const { allowAttachments, files, setFiles, ...rest } = props as (
@@ -57,20 +54,7 @@ export function MessageInput({
   const [isDragging, setIsDragging] = useState(false)
   const [showInterruptPrompt, setShowInterruptPrompt] = useState(false)
 
-  const {
-    isListening,
-    isSpeechSupported,
-    isRecording,
-    isTranscribing,
-    audioStream,
-    toggleListening,
-    stopRecording,
-  } = useAudioRecording({
-    transcribeAudio,
-    onTranscriptionComplete: (text) => {
-      props.onChange?.({ target: { value: text } } as any)
-    },
-  })
+
 
   useEffect(() => {
     if (!isGenerating) {
@@ -198,11 +182,6 @@ export function MessageInput({
         />
       )}
 
-      <RecordingPrompt
-        isVisible={isRecording}
-        onStopRecording={stopRecording}
-      />
-
       <div className="relative flex w-full items-center space-x-2">
         <div className="relative flex-1">
           <textarea
@@ -237,18 +216,7 @@ export function MessageInput({
             <Paperclip className="h-4 w-4" />
           </Button>
         )}
-        {isSpeechSupported && (
-          <Button
-            type="button"
-            variant="outline"
-            className={cn("h-8 w-8", isListening && "text-primary")}
-            aria-label="Voice input"
-            size="icon"
-            onClick={toggleListening}
-          >
-            <Mic className="h-4 w-4" />
-          </Button>
-        )}
+        
         {isGenerating && stop ? (
           <Button
             type="button"
@@ -323,67 +291,3 @@ function showFileUploadDialog() {
     }
   })
 }
-
-function TranscribingOverlay() {
-  return (
-    <motion.div
-      className="flex h-full w-full flex-col items-center justify-center rounded-xl bg-background/80 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="relative">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <motion.div
-          className="absolute inset-0 h-8 w-8 animate-pulse rounded-full bg-primary/20"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1.2, opacity: 1 }}
-          transition={{
-            duration: 1,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut",
-          }}
-        />
-      </div>
-      <p className="mt-4 text-sm font-medium text-muted-foreground">
-        Transcribing audio...
-      </p>
-    </motion.div>
-  )
-}
-
-interface RecordingPromptProps {
-  isVisible: boolean
-  onStopRecording: () => void
-}
-
-function RecordingPrompt({ isVisible, onStopRecording }: RecordingPromptProps) {
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ top: 0, filter: "blur(5px)" }}
-          animate={{
-            top: -40,
-            filter: "blur(0px)",
-            transition: {
-              type: "spring",
-              filter: { type: "tween" },
-            },
-          }}
-          exit={{ top: 0, filter: "blur(5px)" }}
-          className="absolute left-1/2 flex -translate-x-1/2 cursor-pointer overflow-hidden whitespace-nowrap rounded-full border bg-background py-1 text-center text-sm text-muted-foreground"
-          onClick={onStopRecording}
-        >
-          <span className="mx-2.5 flex items-center">
-            <Info className="mr-2 h-3 w-3" />
-            Click to finish recording
-          </span>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
