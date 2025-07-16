@@ -1,6 +1,6 @@
 const SPOONACULAR_BASE_URL = "https://api.spoonacular.com";
 
-//#region Models
+//#region Interfaces
 export interface RecipeSearchResult {
   id: number;
   title: string;
@@ -11,6 +11,7 @@ export interface RecipeDetails {
   extendedIngredients: { original: string }[];
   analyzedInstructions?: { steps: { step: string }[] }[];
   instructions?: string;
+  servings: number;
 }
 
 export interface NutritionInfo {

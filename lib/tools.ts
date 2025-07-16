@@ -58,6 +58,7 @@ export const getRecipeDetailsTool = tool({
         title: data.title,
         ingredients: data.extendedIngredients.map((ing) => ing.original),
         instructions: data.analyzedInstructions?.[0]?.steps.map((step) => step.step) ?? data.instructions ?? "No instructions available.",
+        servings: data.servings,
     };
   },
 });
