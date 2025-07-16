@@ -8,9 +8,7 @@ import { omit } from "remeda"
 import { cn } from "@/lib/utils"
 import { useAudioRecording } from "@/hooks/use-audio-recording"
 import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea"
-import { AudioVisualizer } from "@/components/ui/audio-visualizer"
 import { Button } from "@/components/ui/button"
-import { FilePreview } from "@/components/ui/file-preview"
 import { InterruptPrompt } from "@/components/ui/interrupt-prompt"
 
 interface MessageInputBaseProps
@@ -220,34 +218,6 @@ export function MessageInput({
             )}
             {...rest}
           />
-
-          {allowAttachments && (
-            <div className="absolute inset-x-3 bottom-0 z-20 overflow-x-scroll py-3">
-              <div className="flex space-x-3">
-                <AnimatePresence mode="popLayout">
-                  {files?.map((file) => {
-                    return (
-                      <FilePreview
-                        key={file.name + String(file.lastModified)}
-                        file={file}
-                        onRemove={() => {
-                          setFiles?.((files) => {
-                            if (!files) return null
-
-                            const filtered = Array.from(files).filter(
-                              (f) => f !== file
-                            )
-                            if (filtered.length === 0) return null
-                            return filtered
-                          })
-                        }}
-                      />
-                    )
-                  })}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -303,14 +273,6 @@ export function MessageInput({
       </div>
 
       {allowAttachments && <FileUploadOverlay isDragging={isDragging} />}
-
-      <RecordingControls
-        isRecording={isRecording}
-        isTranscribing={isTranscribing}
-        audioStream={audioStream}
-        textAreaHeight={textAreaHeight}
-        onStopRecording={stopRecording}
-      />
     </div>
   )
 }
@@ -425,46 +387,3 @@ function RecordingPrompt({ isVisible, onStopRecording }: RecordingPromptProps) {
   )
 }
 
-interface RecordingControlsProps {
-  isRecording: boolean
-  isTranscribing: boolean
-  audioStream: MediaStream | null
-  textAreaHeight: number
-  onStopRecording: () => void
-}
-
-function RecordingControls({
-  isRecording,
-  isTranscribing,
-  audioStream,
-  textAreaHeight,
-  onStopRecording,
-}: RecordingControlsProps) {
-  if (isRecording) {
-    return (
-      <div
-        className="absolute inset-[1px] z-50 overflow-hidden rounded-xl"
-        style={{ height: textAreaHeight - 2 }}
-      >
-        <AudioVisualizer
-          stream={audioStream}
-          isRecording={isRecording}
-          onClick={onStopRecording}
-        />
-      </div>
-    )
-  }
-
-  if (isTranscribing) {
-    return (
-      <div
-        className="absolute inset-[1px] z-50 overflow-hidden rounded-xl"
-        style={{ height: textAreaHeight - 2 }}
-      >
-        <TranscribingOverlay />
-      </div>
-    )
-  }
-
-  return null
-}
