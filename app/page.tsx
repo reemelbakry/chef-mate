@@ -9,7 +9,7 @@ import { ModelSelector } from "@/components/model-selector"
 
 const SUGGESTIONS = [
   "Suggest me 3 recipes from the italian cuisine",
-  "What's the nutrition facts of a casesar salad?",
+  "What's the nutrition facts of a caesar salad?",
   "Can you list me the ingredients needed to make a lasagna silvia?",
 ]
 

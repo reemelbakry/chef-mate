@@ -10,14 +10,19 @@ const SUPPORTED_CUISINES = [
   "Spanish", "Thai", "Vietnamese"
 ] as const;
 
+const SUPPORTED_MEAL_TYPES = [
+  "main course", "side dish", "dessert", "appetizer", "salad", "bread", "breakfast", "soup", "beverage", "sauce", "marinade", "fingerfood", "snack", "drink"
+] as const;
+
 export const findRecipesTool = tool({
   description: "Finds recipe suggestions. Can filter by a list of ingredients the user has and/or by a specific cuisine type.",
   parameters: z.object({
     ingredients: z.array(z.string()).optional().describe("A list of ingredients that the user has available."),
     cuisine: z.enum(SUPPORTED_CUISINES).optional().describe("The cuisine to filter recipes by. If the user specifies a cuisine not in this list, you must inform them and ask to choose from the available options."),
     query: z.string().optional().describe("The (natural language) recipe search query.."),
+    type: z.enum(SUPPORTED_MEAL_TYPES).optional().describe("The type of meal to filter recipes by."),
   }),
-  execute: async ({ ingredients, cuisine, query }) => {
+  execute: async ({ ingredients, cuisine, query, type }) => {
     const params = new URLSearchParams();
     if (ingredients && ingredients.length > 0) {
         params.append("includeIngredients", ingredients.join(","));
@@ -28,7 +33,9 @@ export const findRecipesTool = tool({
     if (query) {
         params.append("query", query);
     }
-    
+    if (type) {
+        params.append("type", type);
+    }
     const { data, error } = await fetchSpoonacular<{results: RecipeSearchResult[]}>("/recipes/complexSearch", params);
 
     if (error || !data) {
@@ -75,6 +82,13 @@ export const getNutritionByIdTool = tool({
       return { error: "Failed to fetch nutrition information." };
     }
     
-    return data;
+    return {
+      calories: data.calories,
+      protein: data.protein,
+      fat: data.fat,
+      carbs: data.carbs,
+      caloricBreakdown: data.caloricBreakdown,
+      weightPerServing: data.weightPerServing,
+    };
   },
 }); 

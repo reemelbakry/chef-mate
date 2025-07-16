@@ -19,6 +19,15 @@ export interface NutritionInfo {
   protein: string;
   fat: string;
   carbs: string;
+  caloricBreakdown: {
+    percentProtein: number;
+    percentFat: number;
+    percentCarbs: number;
+  };
+  weightPerServing: {
+    amount: number;
+    unit: string;
+  };
 }
 //#endregion
 
@@ -31,6 +40,8 @@ export async function fetchSpoonacular<T>(path: string, params: URLSearchParams 
 
   params.append("apiKey", SPOONACULAR_API_KEY);
   const url = `${SPOONACULAR_BASE_URL}${path}?${params.toString()}`;
+
+  console.log("URL", url);
 
   try {
     const res = await fetch(url);
