@@ -1,8 +1,7 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { motion } from "framer-motion"
 import { Ban, ChevronRight, Terminal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -65,24 +64,24 @@ interface Attachment {
 interface PartialToolCall {
   state: "partial-call"
   toolName: string
-  args: any
-  result?: any
+  args: unknown
+  result?: unknown
 }
 
 interface ToolCall {
   state: "call"
   toolName: string
-  args: any
-  result?: any
+  args: unknown
+  result?: unknown
 }
 
 interface ToolResult {
   state: "result"
   toolName: string
-  args: any
+  args: unknown
   result: {
     __cancelled?: boolean
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -106,7 +105,7 @@ interface TextPart {
 // For compatibility with AI SDK types, not used
 interface SourcePart {
   type: "source"
-  source?: any
+  source?: unknown
 }
 
 interface FilePart {
@@ -119,7 +118,7 @@ interface StepStartPart {
   type: "step-start"
 }
 
-type MessagePart =
+export type MessagePart =
   | TextPart
   | ReasoningPart
   | ToolInvocationPart
@@ -150,20 +149,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   showTimeStamp = false,
   animation = "scale",
   actions,
-  experimental_attachments,
   toolInvocations,
   parts,
 }) => {
-  const files = useMemo(() => {
-    return experimental_attachments?.map((attachment) => {
-      const dataArray = dataUrlToUint8Array(attachment.url)
-      const file = new File([dataArray], attachment.name ?? "Unknown", {
-        type: attachment.contentType,
-      })
-      return file
-    })
-  }, [experimental_attachments])
-
   const isUser = role === "user"
 
   const formattedTime = createdAt?.toLocaleTimeString("en-US", {
@@ -273,17 +261,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       ) : null}
     </div>
   )
-}
-
-function dataUrlToUint8Array(data: string) {
-  const base64 = data.split(",")[1]
-  const binaryString = atob(base64)
-  const len = binaryString.length
-  const bytes = new Uint8Array(len)
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i)
-  }
-  return bytes
 }
 
 const ReasoningBlock = ({ part }: { part: ReasoningPart }) => {

@@ -2,18 +2,17 @@
 
 import React from "react"
 import { motion } from "framer-motion"
-import { Check, Code2, Loader2, AlertTriangle } from "lucide-react"
+import { Check, Loader2, AlertTriangle } from "lucide-react"
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { cn } from "@/lib/utils"
 
 interface ToolInvocationProps {
   toolName: string
-  args: any
+  args: unknown
   status: "running" | "complete" | "error"
 }
 

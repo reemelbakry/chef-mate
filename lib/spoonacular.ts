@@ -32,7 +32,7 @@ export interface NutritionInfo {
 //#endregion
 
 //#region Tool Call Functions
-export async function fetchSpoonacular<T>(path: string, params: URLSearchParams = new URLSearchParams()): Promise<{data: T | null, error: {message: string, details?: any} | null}> {
+export async function fetchSpoonacular<T>(path: string, params: URLSearchParams = new URLSearchParams()): Promise<{ data: T | null; error: { message: string; details?: unknown } | null }> {
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
   if (!SPOONACULAR_API_KEY) {
     throw new Error("Missing Spoonacular API key. Please set SPOONACULAR_API_KEY in your environment variables.");

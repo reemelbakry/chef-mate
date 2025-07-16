@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useChat, type UseChatOptions } from "@ai-sdk/react"
+import { useChat } from "@ai-sdk/react"
 
 import { Chat } from "@/components/ui/chat"
 import { Header } from "@/components/header"
@@ -13,11 +13,7 @@ const SUGGESTIONS = [
   "Can you list me the ingredients needed to make a lasagna silvia?",
 ]
 
-type ChatDemoProps = {
-  initialMessages?: UseChatOptions["initialMessages"]
-}
-
-export default function Home(props: ChatDemoProps) {
+export default function Home() {
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const {
     messages,
@@ -27,9 +23,7 @@ export default function Home(props: ChatDemoProps) {
     append,
     stop,
     status,
-    setMessages,
   } = useChat({
-    ...props,
     api: "/api/chat",
     body: {
       data: {
@@ -55,7 +49,6 @@ export default function Home(props: ChatDemoProps) {
             isGenerating={isLoading}
             stop={stop}
             append={append}
-            setMessages={setMessages}
             suggestions={SUGGESTIONS}
           />
         </div>

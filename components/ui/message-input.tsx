@@ -2,8 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowUp, Info, Loader2, Mic, Paperclip, Square, X } from "lucide-react"
-import { omit } from "remeda"
+import { ArrowUp, Paperclip, Square } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea"
@@ -150,13 +149,6 @@ export function MessageInput({
   }
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const [textAreaHeight, setTextAreaHeight] = useState<number>(0)
-
-  useEffect(() => {
-    if (textAreaRef.current) {
-      setTextAreaHeight(textAreaRef.current.offsetHeight)
-    }
-  }, [props.value])
 
   const showFileList =
     allowAttachments && files && files.length > 0

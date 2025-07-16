@@ -7,13 +7,15 @@ import {
   useRef,
   useState,
   type ReactElement,
+  type Dispatch,
+  type SetStateAction,
 } from "react"
 import { ArrowDown, ThumbsDown, ThumbsUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useAutoScroll } from "@/hooks/use-auto-scroll"
 import { Button } from "@/components/ui/button"
-import { type Message } from "@/components/ui/chat-message"
+import { type Message, type MessagePart } from "@/components/ui/chat-message"
 import { CopyButton } from "@/components/ui/copy-button"
 import { MessageInput } from "@/components/ui/message-input"
 import { MessageList } from "@/components/ui/message-list"
@@ -34,8 +36,7 @@ interface ChatPropsBase {
     messageId: string,
     rating: "thumbs-up" | "thumbs-down"
   ) => void
-  setMessages?: (messages: any[]) => void
-  transcribeAudio?: (blob: Blob) => Promise<string>
+  setMessages?: Dispatch<SetStateAction<Message[]>>
 }
 
 interface ChatPropsWithoutSuggestions extends ChatPropsBase {
@@ -62,7 +63,6 @@ export function Chat({
   className,
   onRateResponse,
   setMessages,
-  transcribeAudio,
 }: ChatProps) {
   const lastMessage = messages.at(-1)
   const isEmpty = messages.length === 0
@@ -170,27 +170,29 @@ export function Chat({
     }
 
     if (lastAssistantMessage.parts && lastAssistantMessage.parts.length > 0) {
-      const updatedParts = lastAssistantMessage.parts.map((part: any) => {
-        if (
-          part.type === "tool-invocation" &&
-          part.toolInvocation &&
-          part.toolInvocation.state === "call"
-        ) {
-          needsUpdate = true
-          return {
-            ...part,
-            toolInvocation: {
-              ...part.toolInvocation,
-              state: "result",
-              result: {
-                content: "Tool execution was cancelled",
-                __cancelled: true,
+      const updatedParts = lastAssistantMessage.parts.map(
+        (part: MessagePart) => {
+          if (
+            part.type === "tool-invocation" &&
+            part.toolInvocation &&
+            part.toolInvocation.state === "call"
+          ) {
+            needsUpdate = true
+            return {
+              ...part,
+              toolInvocation: {
+                ...part.toolInvocation,
+                state: "result",
+                result: {
+                  content: "Tool execution was cancelled",
+                  __cancelled: true,
+                },
               },
-            },
+            } as const
           }
+          return part
         }
-        return part
-      })
+      )
 
       if (needsUpdate) {
         updatedMessage = {
@@ -282,12 +284,10 @@ export function Chat({
           <MessageInput
             value={input}
             onChange={handleInputChange}
-            //allowAttachments
             files={files}
             setFiles={setFiles}
             stop={handleStop}
             isGenerating={isGenerating}
-            transcribeAudio={transcribeAudio}
           />
         )}
       </ChatForm>
@@ -369,7 +369,7 @@ interface ChatFormProps {
 }
 
 export const ChatForm = forwardRef<HTMLFormElement, ChatFormProps>(
-  ({ children, handleSubmit, isPending, className }, ref) => {
+  ({ children, handleSubmit, className }, ref) => {
     const [files, setFiles] = useState<File[] | null>(null)
 
     const onSubmit = (event: React.FormEvent) => {
