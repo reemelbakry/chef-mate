@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
   useState,
   type ReactElement,
@@ -69,6 +70,62 @@ export function Chat({
 
   const messagesRef = useRef(messages)
   messagesRef.current = messages
+
+  const [quickReplies, setQuickReplies] = useState<string[]>([])
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1]
+
+    if (isGenerating || !lastMessage || lastMessage.role !== "assistant") {
+      setQuickReplies([])
+      return
+    }
+
+    const content = lastMessage.content
+    let newSuggestions: string[] = []
+
+    const ingredientsRegex = /ingredients:/i
+    const instructionsRegex = /instructions:/i
+    const hasIngredients = ingredientsRegex.test(content)
+    const hasInstructions = instructionsRegex.test(content)
+
+    const cleanRecipeName = (str: string) => {
+      return str.trim().replace(/["*]/g, "")
+    }
+
+    if (hasIngredients && hasInstructions) {
+      let title = ""
+      const firstLine = content.split("\n")[0].trim()
+
+      const introSentenceRegex = /for the (.*?)(\.|$|:)/i
+      const introMatch = firstLine.match(introSentenceRegex)
+
+      if (introMatch && introMatch[1]) {
+        title = introMatch[1]
+      } else if (!ingredientsRegex.test(firstLine)) {
+        title = firstLine
+      }
+
+      if (title) {
+        newSuggestions.push(
+          `Show nutrition facts for ${cleanRecipeName(title)}`
+        )
+      } else {
+        newSuggestions.push("Show nutrition facts for this recipe")
+      }
+      newSuggestions.push("Find another recipe")
+    } else {
+      const recipeListRegex = /^\s*\d+\.\s+(.*)/gm
+      const recipeMatches = [...content.matchAll(recipeListRegex)]
+      if (recipeMatches.length > 0) {
+        newSuggestions = recipeMatches.map(
+          match => `Show ingredients for ${cleanRecipeName(match[1])}`
+        )
+      }
+    }
+
+    setQuickReplies(newSuggestions.slice(0, 3))
+  }, [messages, isGenerating])
 
   // Enhanced stop function that marks pending tool calls as cancelled
   const handleStop = useCallback(() => {
@@ -208,6 +265,11 @@ export function Chat({
             isTyping={isTyping}
             messageOptions={messageOptions}
           />
+          {quickReplies.length > 0 && append && (
+            <div className="p-4">
+              <PromptSuggestions append={append} suggestions={quickReplies} />
+            </div>
+          )}
         </ChatMessages>
       ) : null}
 
