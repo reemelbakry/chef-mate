@@ -1,6 +1,9 @@
 # ChefMate 🧑‍🍳
 ChefMate is an AI-powered chef assistant designed to help you discover and cook delicious recipes. Using a friendly, conversational interface, you can find recipes based on ingredients, cuisine types, or even get a surprise suggestion!
 
+## 🚀 Live Demo
+**[https://chefmate-zeta.vercel.app/](https://chefmate-zeta.vercel.app/)**
+
 ## ✨ Features
 - **Conversational Recipe Search:** Find recipes by talking to ChefMate in natural language.
 - **Detailed Recipe Information:** Get access to ingredients, step-by-step instructions, and serving sizes.
